@@ -1,35 +1,61 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 
-export default async function DetailPage({ params }) {
-  const response = await fetch(`https://api.jikan.moe/v4/anime/${params.id}`);
-  const anime = await response.json();
-  const data = anime.data;
+export default function DetailPage() {
+  const { id } = useParams();
+  const [anime, setAnime] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+
+    async function fetchAnime() {
+      try {
+        const response = await fetch(`https://api.jikan.moe/v4/anime/${id}`);
+        const data = await response.json();
+        setAnime(data.data);
+      } catch (error) {
+        console.error("Error fetching anime:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAnime();
+  }, [id]);
+
+  if (loading) return <p className="text-center text-lg">Loading...</p>;
+  if (!anime)
+    return <p className="text-center text-red-500">Anime tidak ditemukan</p>;
 
   return (
     <div className="bg-black absolute top-0 min-w-full text-white">
       <div className="relative h-[90vh]">
         <Image
-          src={data.images.jpg.large_image_url}
-          alt={data.title}
+          src={anime.images.jpg.large_image_url}
+          alt={anime.title}
           fill
           className="object-cover opacity-50"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
         <div className="absolute bottom-10 left-10 max-w-3xl">
-          <h1 className="text-5xl font-bold mb-4">{data.title}</h1>
+          <h1 className="text-5xl font-bold mb-4">{anime.title}</h1>
           <div className="flex gap-4 mb-6">
             <span className="bg-red-600 px-3 py-1 rounded-full text-sm">
-              {data.rating}
+              {anime.rating}
             </span>
             <span className="bg-gray-700 px-3 py-1 rounded-full text-sm">
-              {data.type}
+              {anime.type}
             </span>
             <span className="bg-gray-700 px-3 py-1 rounded-full text-sm">
-              {data.episodes} Episodes
+              {anime.episodes} Episodes
             </span>
           </div>
-          <p className="text">{data.synopsis}</p>
+          <p className="text">{anime.synopsis}</p>
         </div>
       </div>
 
@@ -40,7 +66,7 @@ export default async function DetailPage({ params }) {
           <div>
             <h3 className="text-xl font-semibold mb-2">Genres</h3>
             <div className="flex flex-wrap gap-2">
-              {data.genres.map((genre) => (
+              {anime.genres.map((genre) => (
                 <span
                   key={genre.mal_id}
                   className="bg-gray-700 px-3 py-1 rounded-full text-sm">
@@ -49,13 +75,13 @@ export default async function DetailPage({ params }) {
               ))}
             </div>
             {/* Trailer Section */}
-            {data.trailer?.embed_url && (
+            {anime.trailer?.embed_url && (
               <div className="mt-10">
                 <h2 className="text-2xl font-bold mb-4">Trailer</h2>
                 <div className="aspect-video w-full max-w-4xl">
                   <iframe
-                    src={data.trailer.embed_url}
-                    title={`${data.title} Trailer`}
+                    src={anime.trailer.embed_url}
+                    title={`${anime.title} Trailer`}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowFullScreen
                     className="w-full h-full rounded-lg"></iframe>
@@ -67,20 +93,20 @@ export default async function DetailPage({ params }) {
             <h3 className="text-xl font-semibold mb-2">Information</h3>
             <ul className="space-y-2">
               <li>
-                <strong>Status:</strong> {data.status}
+                <strong>Status:</strong> {anime.status}
               </li>
               <li>
-                <strong>Released:</strong> {data.aired?.string}
+                <strong>Released:</strong> {anime.aired?.string}
               </li>
               <li>
                 <strong>Studio:</strong>{" "}
-                {data.studios?.map((studio) => studio.name).join(", ")}
+                {anime.studios?.map((studio) => studio.name).join(", ")}
               </li>
               <li>
-                <strong>Source:</strong> {data.source}
+                <strong>Source:</strong> {anime.source}
               </li>
               <li>
-                <strong>Duration:</strong> {data.duration}
+                <strong>Duration:</strong> {anime.duration}
               </li>
             </ul>
           </div>
